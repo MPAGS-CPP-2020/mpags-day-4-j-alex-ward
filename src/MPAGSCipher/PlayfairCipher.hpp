@@ -4,6 +4,7 @@
 // Standard library includes
 #include <string>
 #include <vector>
+#include <map>
 
 // Our project headers
 #include "CipherMode.hpp"
@@ -49,6 +50,13 @@ class PlayfairCipher {
 
     /// The cipher key, essentially a constant shift to be applied
     std::string key_ = "";
+
+    /// The map assigning coordindates to the letters in the key
+    using Letter2CoordMap = std::map<std::string, std::pair<int, int>>;
+    Letter2CoordMap coordMap;
+    /// The map assinging letters to the cooridnates in the 5x5 playfair cipher
+    using Coord2LetterMap = std::map<std::pair<int, int>, std::string>;
+    Coord2LetterMap letterMap;
 };
 
 #endif

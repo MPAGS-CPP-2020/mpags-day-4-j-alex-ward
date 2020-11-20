@@ -46,8 +46,6 @@ void PlayfairCipher::setKey(const std::string &key)
   };
   key_.erase(std::remove_if(key_.begin(), key_.end(), encounteredChars), key_.end());
   // Store the coords of each letter
-  using Letter2CoordMap = std::map<std::string, std::pair<int, int>>;
-  Letter2CoordMap coordMap;
   int n{0};
   for (std::string::size_type i = 0; i < key_.size(); ++i, ++n)
   {
@@ -67,33 +65,13 @@ void PlayfairCipher::setKey(const std::string &key)
     //std::cout << "xCoord = "<< xCoord << " yCoord = " << yCoord << " coord = " << coord.first << "," << coord.second << std::endl;
     std::string character{key_[i]};
     coordMap[character] = coord;
+    // Store the playfair cihper key map
+    letterMap[coord] = character;
   };
   for (auto p : coordMap)
   {
     std::cout << p.first << ": " << p.second.first << "," << p.second.second << std::endl;
   }
-  // Store the playfair cihper key map
-  using Coord2LetterMap = std::map<std::pair<int, int>, std::string>;
-  Coord2LetterMap letterMap;
-  int m{0};
-  for (std::string::size_type i = 0; i < key_.size(); ++i, ++m)
-  {
-    int xCoord{0};
-    if (m <= 4)
-      xCoord = 0;
-    else if (m > 4 && m <= 9)
-      xCoord = 1;
-    else if (m > 9 && m <= 14)
-      xCoord = 2;
-    else if (m > 14 && m <= 19)
-      xCoord = 3;
-    else if (m > 19 && m <= 24)
-      xCoord = 4;
-    int yCoord{m % 5};
-    auto coord = std::make_pair(xCoord, yCoord);
-    std::string character{key_[i]};
-    letterMap[coord] = character;
-  };
   for (auto q : letterMap)
   {
     std::cout << q.first.first << "," << q.first.second << ": " << q.second << std::endl;
@@ -114,83 +92,78 @@ void PlayfairCipher::setKey(const std::string &key)
 std::string PlayfairCipher::applyCipher(const std::string &inputText, const CipherMode /*cipherMode*/) const
 {
   std::string input{""};
+  std::string digraph{""};
+  std::string cipher{""};
+  std::string playfairCipher{""};
   input += inputText;
   // ChangeJ→I
   std::transform(input.begin(), input.end(), input.begin(),
                  [](char val) {if (val=='J') return 'I'; else return val; });
   // If repeated chars in a digraph add an X or Q if XX
-  std::string thoughts{"Here loop through the string using something like the lambda to change j->i algorithm used above\
-  to make the necessary change. might need a loop to work with the letter pairs\
-  What i tried doesnt take into account the digraphs and also doesnt work.\
-  Maybe have a loop that takes each character !%2 and the next character and compares them."};
-  /*for (std::string::size_type i = 0; i < input.size(); ++i)
+  for (std::string::size_type i = 0, j = 1; j < input.size(); ++i, ++j, ++i, ++j)
   {
-    char val2 {input.at(i-1)};
-    std::transform(input.begin(), input.end(), input.begin(),[](char val, char val2) {if (val==val2) return 'X'; else return val; });
+    if (input.at(i) == 'X' && input.at(i) == input.at(j))
+    {
+      input.replace(j, 1, "Q");
+    }
+    if (input.at(i) == input.at(j))
+    {
+      input.replace(j, 1, "X");
+    }
   }
-  std::transform(input.begin(), input.end(), input.begin(),
-                 [](char val) {char val2 {val -1}; 
-                 if (val==val2) return 'X'; else return val; });
-  std::transform(input.begin(), input.end(), input.begin(),
-                 [](char val) {char val2 {'X'}; if (val==val2) return 'Q'; else return val; });*/
-
   // if the size of input is odd, add a trailing Z
   if (input.size() % 2 != 0)
   {
     input += 'Z';
   }
   // Loop over the input in Digraphs
-  std::string thoughts3{"Have a loop for the next few tasks. Have it loop through the input and append every two letters\
-  to a vector\
-  Currently this jsut makes a vector of digraphs, perhpas needs to change to loop over each i and i+1 as a pair"};
-  std::vector<std::pair<std::string, std::string>> digraphs {};
-  int index{0};
-  for (std::string::size_type i = 0; i < input.size(); ++i, ++index)
+  for (std::string::size_type i = 0; i < input.size(); ++i, ++i)
   {
-    std::string diFirst {""};
-    std::string diSecond {""};
-    if (index == 0 || (index % 2 == 0 && i < (input.size() -1)))
+    std::cout << "Digraph = " << input.at(i) << input.at(i + 1) << std::endl;
+    // - Find the coords in the grid for each digraph
+    /// --- Not sure im using .find() correctly here, doesnt seem like its needed in the below code.
+    std::string character{input.at(i)};
+    std::string character2{input.at(i + 1)};
+    std::string newChar1 {""};
+    std::string newChar2 {""};
+    if (coordMap.find(character) != coordMap.end())
     {
-      diFirst += input.at(index);
-      diSecond += input.at(index + 1);
-      auto Pair = std::make_pair(diFirst, diSecond);
-      digraphs.push_back(Pair);
+      std::cout << "Coords (" << character << ") = " << coordMap.at(character).first << ":" << coordMap.at(character).second << std::endl;
+      std::cout << "Coords (" << character2 << ") = " << coordMap.at(character2).first << ":" << coordMap.at(character2).second << std::endl;
+      auto coordinates = std::make_pair(coordMap.at(character).first, coordMap.at(character).second);
+      auto coordinates2 = std::make_pair(coordMap.at(character2).first, coordMap.at(character2).second);
+
+      // - Apply the rules to these coords to get 'new' coords
+      if (coordinates.first == coordinates2.first)
+      {
+        coordinates = std::make_pair(coordMap.at(character).first, coordMap.at(character).second +1);
+        coordinates2 = std::make_pair(coordMap.at(character2).first, coordMap.at(character2).second +1);
+      }
+      else if (coordinates.second == coordinates2.second)
+      {
+        coordinates = std::make_pair(coordMap.at(character).first+1, coordMap.at(character).second);
+        coordinates2 = std::make_pair(coordMap.at(character2).first+1, coordMap.at(character2).second);
+      }
+      else
+      {
+        int yDiff {coordinates.second - coordinates2.second};
+        coordinates = std::make_pair(coordMap.at(character).first, coordMap.at(character).second-yDiff);
+        coordinates2 = std::make_pair(coordMap.at(character2).first, coordMap.at(character2).second+yDiff);
+      }
+      std::cout << "New Coords (" << character << ") = " << coordinates.first << ":" << coordinates.second << std::endl;
+      std::cout << "New Coords (" << character2 << ") = " << coordinates2.first << ":" << coordinates2.second << std::endl;
+    
+      // - Find the letter associated with the new coords
+      newChar1 = letterMap.at(coordinates);
+      newChar2 = letterMap.at(coordinates2);
+      digraph += character + character2 + " ";
+      cipher += newChar1 + newChar2 + " ";
+      playfairCipher += newChar1 + newChar2;
     }
-  }
-  for (std::string::size_type i = 0; i < digraphs.size(); ++i)
-    {
-      std::cout << digraphs.at(i).first << digraphs.at(i).second << std::endl;
-    }
-
-  // - Find the coords in the grid for each digraph
-  std::string thoughts4{"find the coords in coordsMap for each letter pair in the above vector and fill another \
-  empty vector with smaller vectors containing two coord pairs in each"};
-
-  // - Apply the rules to these coords to get 'new' coords
-  std::string thoughts5{"Have a switch which checks for the conditions. One conditions tests for if they are on the same row\
-  and then assigns the letter to the one to the left. One tests for if the same column and shifts one row down. The final one \
-  Assumes both of the above is wrong and then shifts the letters to the required positions. Example switch commented out below\
-  The loop only ads one to the coords for the first two cases or the required difference in the final case. These new\
-  Coords are then put into a new vector.\
-  Also i think end the loop here."};
-  //Have a loop which loops through each vector of letters and thus each coord vector pair, this coord pair is then put into the switch
-  /*switch(coord){
-      case(coord[0].first == coord[1].first):
-        //Assign to letter to the right
-        break;
-      case(coord[0].second == coord[1].second):
-        //Assign to letter below
-        break;
-      default:
-        //Find difference in .first. Check the rules for which one moves which way 
-        break;
-    }*/
-
-  // - Find the letter associated with the new coords
-  std::string thoughts6{"I think here take the vector with the new coords and loop through the coordMap to find the associated letters\
-  I think make a new set of vectors with the new letter pairs, as above but with the new letters for each coord.\
-  So have a loop through the new coord vector which find the associated letter in coordMap and appends this to the new vector"};
-
+  } //end of loop
   // return the text
-  return key_ + "__" + input;
+  std::cout << "Input = " << inputText << "  " << "Transformed Input = " << input << std::endl;
+  std::cout << "Key = " << key_ << std::endl;
+  std::cout << "Digraph = " << digraph << "  " << "Transformed Digraph = " << cipher << std::endl;
+  return "PlayfairCipher = " + playfairCipher;
 }
