@@ -126,29 +126,39 @@ std::string PlayfairCipher::applyCipher(const std::string &inputText, const Ciph
     std::string character2{input.at(i + 1)};
     std::string newChar1 {""};
     std::string newChar2 {""};
+    int x1 {coordMap.at(character).first};
+    int x2 {coordMap.at(character2).first};
+    int y1 {coordMap.at(character).second};
+    int y2 {coordMap.at(character2).second};
     if (coordMap.find(character) != coordMap.end())
     {
-      std::cout << "Coords (" << character << ") = " << coordMap.at(character).first << ":" << coordMap.at(character).second << std::endl;
-      std::cout << "Coords (" << character2 << ") = " << coordMap.at(character2).first << ":" << coordMap.at(character2).second << std::endl;
-      auto coordinates = std::make_pair(coordMap.at(character).first, coordMap.at(character).second);
-      auto coordinates2 = std::make_pair(coordMap.at(character2).first, coordMap.at(character2).second);
+      std::cout << "Coords (" << character << ") = " << x1 << ":" << y1 << std::endl;
+      std::cout << "Coords (" << character2 << ") = " << x2 << ":" << y2 << std::endl;
+      auto coordinates = std::make_pair(x1, y1);
+      auto coordinates2 = std::make_pair(x2, y2);
 
       // - Apply the rules to these coords to get 'new' coords
-      if (coordinates.first == coordinates2.first)
+      if (x1 == x2)
       {
-        coordinates = std::make_pair(coordMap.at(character).first, coordMap.at(character).second +1);
-        coordinates2 = std::make_pair(coordMap.at(character2).first, coordMap.at(character2).second +1);
+        if (y1 + 1 > 4){y1 = y1-5;}
+        if (y2 + 1 > 4){y2 = y2-5;}
+        coordinates = std::make_pair(x1, y1 +1);
+        coordinates2 = std::make_pair(x2, y2 +1);
       }
-      else if (coordinates.second == coordinates2.second)
+      else if (y1 == y2)
       {
-        coordinates = std::make_pair(coordMap.at(character).first+1, coordMap.at(character).second);
-        coordinates2 = std::make_pair(coordMap.at(character2).first+1, coordMap.at(character2).second);
+        if (x1 + 1 > 4){x1 = x1-5;}
+        if (x2 + 1 > 4){x2 = x2-5;}
+        coordinates = std::make_pair(x1+1, y1);
+        coordinates2 = std::make_pair(x2+1, y2);
       }
       else
       {
-        int yDiff {coordinates.second - coordinates2.second};
-        coordinates = std::make_pair(coordMap.at(character).first, coordMap.at(character).second-yDiff);
-        coordinates2 = std::make_pair(coordMap.at(character2).first, coordMap.at(character2).second+yDiff);
+        int yDiff {y1 - y2};
+        if (y1 + yDiff > 4 && y1 < y2){y1 = y1-5;}
+        if (y2 + yDiff > 4 && y2 < y1){y2 = y2-5;}
+        coordinates = std::make_pair(x1, y1-yDiff);
+        coordinates2 = std::make_pair(x2, y2+yDiff);
       }
       std::cout << "New Coords (" << character << ") = " << coordinates.first << ":" << coordinates.second << std::endl;
       std::cout << "New Coords (" << character2 << ") = " << coordinates2.first << ":" << coordinates2.second << std::endl;
