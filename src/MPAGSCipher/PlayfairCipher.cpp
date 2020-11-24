@@ -89,7 +89,7 @@ void PlayfairCipher::setKey(const std::string &key)
   }
 }
 
-std::string PlayfairCipher::applyCipher(const std::string &inputText, const CipherMode /*cipherMode*/) const
+std::string PlayfairCipher::applyCipher(const std::string &inputText, const CipherMode cipherMode) const
 {
   std::string input{""};
   std::string digraph{""};
@@ -103,18 +103,17 @@ std::string PlayfairCipher::applyCipher(const std::string &inputText, const Ciph
   for (std::string::size_type i = 0, j = 1; j < input.size(); ++i, ++j, ++i, ++j)
   {
     if (input.at(i) == 'X' && input.at(i) == input.at(j))
-    {
-      input.replace(j, 1, "Q");
-    }
+    { input.replace(j, 1, "Q");}
     if (input.at(i) == input.at(j))
-    {
-      input.replace(j, 1, "X");
-    }
+    { input.replace(j, 1, "X"); }
   }
   // if the size of input is odd, add a trailing Z
   if (input.size() % 2 != 0)
   {
-    input += 'Z';
+    if (input.back() != 'Z')
+    { input += 'Z'; }
+    else
+    { input += 'X'; }
   }
   // Loop over the input in Digraphs
   for (std::string::size_type i = 0; i < input.size(); ++i, ++i)
@@ -124,12 +123,12 @@ std::string PlayfairCipher::applyCipher(const std::string &inputText, const Ciph
     /// --- Not sure im using .find() correctly here, doesnt seem like its needed in the below code.
     std::string character{input.at(i)};
     std::string character2{input.at(i + 1)};
-    std::string newChar1 {""};
-    std::string newChar2 {""};
-    int x1 {coordMap.at(character).first};
-    int x2 {coordMap.at(character2).first};
-    int y1 {coordMap.at(character).second};
-    int y2 {coordMap.at(character2).second};
+    std::string newChar1{""};
+    std::string newChar2{""};
+    int x1{coordMap.at(character).first};
+    int x2{coordMap.at(character2).first};
+    int y1{coordMap.at(character).second};
+    int y2{coordMap.at(character2).second};
     if (coordMap.find(character) != coordMap.end())
     {
       std::cout << "Coords (" << character << ") = " << x1 << ":" << y1 << std::endl;
@@ -140,29 +139,53 @@ std::string PlayfairCipher::applyCipher(const std::string &inputText, const Ciph
       // - Apply the rules to these coords to get 'new' coords
       if (x1 == x2)
       {
-        if (y1 + 1 > 4){y1 = y1-5;}
-        if (y2 + 1 > 4){y2 = y2-5;}
-        coordinates = std::make_pair(x1, y1 +1);
-        coordinates2 = std::make_pair(x2, y2 +1);
+        switch (cipherMode)
+        {
+        case CipherMode::Encrypt:
+          if (y1 + 1 > 4) {y1 = y1 - 5;}
+          if (y2 + 1 > 4){ y2 = y2 - 5;}
+          coordinates = std::make_pair(x1, y1 + 1);
+          coordinates2 = std::make_pair(x2, y2 + 1);
+          break;
+        case CipherMode::Decrypt:
+          if (y1 - 1 < 0) {y1 = y1 + 5;}
+          if (y2 - 1 < 0){ y2 = y2 + 5;}
+          coordinates = std::make_pair(x1, y1 - 1);
+          coordinates2 = std::make_pair(x2, y2 - 1);
+          break;
+        }
       }
       else if (y1 == y2)
       {
-        if (x1 + 1 > 4){x1 = x1-5;}
-        if (x2 + 1 > 4){x2 = x2-5;}
-        coordinates = std::make_pair(x1+1, y1);
-        coordinates2 = std::make_pair(x2+1, y2);
+        switch (cipherMode)
+        {
+        case CipherMode::Encrypt:
+          if (x1 + 1 > 4){x1 = x1 - 5;}
+          if (x2 + 1 > 4){x2 = x2 - 5;}
+          coordinates = std::make_pair(x1 + 1, y1);
+          coordinates2 = std::make_pair(x2 + 1, y2);
+          break;
+        case CipherMode::Decrypt:
+          if (x1 - 1 < 0){x1 = x1 + 5;}
+          if (x2 - 1 < 0){x2 = x2 + 5;}
+          coordinates = std::make_pair(x1 - 1, y1);
+          coordinates2 = std::make_pair(x2 - 1, y2);
+          break;
+        }
       }
       else
       {
-        int yDiff {y1 - y2};
-        if (y1 + yDiff > 4 && y1 < y2){y1 = y1-5;}
-        if (y2 + yDiff > 4 && y2 < y1){y2 = y2-5;}
-        coordinates = std::make_pair(x1, y1-yDiff);
-        coordinates2 = std::make_pair(x2, y2+yDiff);
+        /*int yDiff{y1 - y2};
+        if (y1 + yDiff > 4 && y1 < y2){y1 = y1 - 5;}
+        if (y2 + yDiff > 4 && y2 < y1){y2 = y2 - 5;}
+        coordinates = std::make_pair(x1, y1 - yDiff);
+        coordinates2 = std::make_pair(x2, y2 + yDiff);*/
+        coordinates = std::make_pair(x1, y2);
+        coordinates2 = std::make_pair(x2, y1);
       }
       std::cout << "New Coords (" << character << ") = " << coordinates.first << ":" << coordinates.second << std::endl;
       std::cout << "New Coords (" << character2 << ") = " << coordinates2.first << ":" << coordinates2.second << std::endl;
-    
+
       // - Find the letter associated with the new coords
       newChar1 = letterMap.at(coordinates);
       newChar2 = letterMap.at(coordinates2);
@@ -174,6 +197,7 @@ std::string PlayfairCipher::applyCipher(const std::string &inputText, const Ciph
   // return the text
   std::cout << "Input = " << inputText << "  " << "Transformed Input = " << input << std::endl;
   std::cout << "Key = " << key_ << std::endl;
-  std::cout << "Digraph = " << digraph << "  " << "Transformed Digraph = " << cipher << std::endl;
+  std::cout << "Digraph = " << digraph << "  "<< "Transformed Digraph = " << cipher << std::endl;
+  std::cout << "Returned Output = " << cipher << std::endl;
   return "PlayfairCipher = " + playfairCipher;
 }
