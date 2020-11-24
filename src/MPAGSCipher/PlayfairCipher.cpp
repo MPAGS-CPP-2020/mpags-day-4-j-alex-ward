@@ -50,15 +50,15 @@ void PlayfairCipher::setKey(const std::string &key)
   for (std::string::size_type i = 0; i < key_.size(); ++i, ++n)
   {
     int xCoord{0};
-    if (n <= 4)
+    if (i <= 4)
       xCoord = 0;
-    else if (n > 4 && n <= 9)
+    else if (4 < i && i <= 9)
       xCoord = 1;
-    else if (n > 9 && n <= 14)
+    else if (9 < i && i <= 14)
       xCoord = 2;
-    else if (n > 14 && n <= 19)
+    else if (14 < i && i <= 19)
       xCoord = 3;
-    else if (n > 19 && n <= 24)
+    else if (19 < i && i <= 24)
       xCoord = 4;
     int yCoord{n % 5};
     auto coord = std::make_pair(xCoord, yCoord);
@@ -198,6 +198,5 @@ std::string PlayfairCipher::applyCipher(const std::string &inputText, const Ciph
   std::cout << "Input = " << inputText << "  " << "Transformed Input = " << input << std::endl;
   std::cout << "Key = " << key_ << std::endl;
   std::cout << "Digraph = " << digraph << "  "<< "Transformed Digraph = " << cipher << std::endl;
-  std::cout << "Returned Output = " << cipher << std::endl;
   return "PlayfairCipher = " + playfairCipher;
 }
